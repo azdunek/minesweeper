@@ -11,7 +11,7 @@ public class Field extends Button {
     private boolean mined;
     private ArrayList<Field> neighbours = new ArrayList<>();
     private List<String> colors = Arrays.asList("blue", "green", "red", "purple", "#800000", "#40E0D0", "black", "gray");
-
+    private boolean flagged;
 
 
     public Field() {
@@ -25,10 +25,13 @@ public class Field extends Button {
         return neighbours;
     }
 
-    public int neighboursNumber() {
-        return neighbours.size();
+    public boolean isFlagged() {
+        return flagged;
     }
 
+    public void setFlagged(boolean flagged) {
+        this.flagged = flagged;
+    }
 
     public boolean isMined() {
         return mined;

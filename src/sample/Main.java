@@ -2,12 +2,13 @@ package sample;
 
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
@@ -18,16 +19,20 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class Main extends Application {
     final int BOARD_SIZE = 10;
+    final int FIELD_NUMBER =BOARD_SIZE*BOARD_SIZE;
     final int MINES_NUMBER = 10;
     private List<List<Field>> fields = new ArrayList<>();
     GridPane gridPane = new GridPane();
-    Image image = new Image(getClass().getResourceAsStream("mine.gif"), 30, 30, true, true);
-    Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Game over! Do you want to play again?", ButtonType.YES, ButtonType.NO);
-    Stage stage;
+    Image mineImage = new Image(getClass().getResourceAsStream("mine.gif"), 30, 30, true, true);
+    Image flagImage = new Image(getClass().getResourceAsStream("flag.png"), 30, 30, true, true);
+    Alert gameOverAlert = new Alert(Alert.AlertType.CONFIRMATION, "Game over! Do you want to play again?", ButtonType.YES, ButtonType.NO);
+    Alert winningAlert = new Alert(Alert.AlertType.CONFIRMATION, "Congratulations, you won!", ButtonType.YES, ButtonType.NO);
 
-    // TODO: Flags on right mouse click! **
-    // TODO: Pop up on win! *
+    Stage stage;
+    private int flagsCounter = 0;
+    
     // TODO: Play again ***
+    // TODO: Change mine image
     // TODO: Refactoring *
 
     @Override
@@ -45,14 +50,55 @@ public class Main extends Application {
     }
 
     // Lambda method
-    public void handleClick(ActionEvent actionEvent) {
-        Field f = (Field) actionEvent.getSource();
-        if (f.isMined()) {
-            gameover();
-        } else {
-            f.reveal();
+    public void handleClick(MouseEvent mouseEvent) {
+        Field f = (Field) mouseEvent.getSource();
+
+        if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
+            if (f.isMined()) {
+                gameover();
+            } else {
+                f.reveal();
+            }
+        } else if (mouseEvent.getButton().equals(MouseButton.SECONDARY)) {
+            if (f.isFlagged()) {
+                flagsCounter--;
+                f.setGraphic(null);
+                f.setFlagged(false);
+            } else {
+                flagsCounter++;
+                f.setGraphic(new ImageView(flagImage));
+                f.setFlagged(true);
+            }
+        }
+
+        if (flagsCounter == MINES_NUMBER) {
+            if (getNumberOfDisabledFields() == (FIELD_NUMBER - MINES_NUMBER)) {
+                gameWin();
+            }
         }
     }
+
+    private int getNumberOfDisabledFields() {
+        int numb = 0;
+        for (List<Field> fieldList : fields) {
+            for (Field field : fieldList) {
+                if(field.isDisabled()){
+                    numb++;
+                }
+            }
+        }
+        return numb;
+    }
+
+    private void gameWin() {
+        winningAlert.showAndWait();
+        if (winningAlert.getResult() == ButtonType.YES) {
+            start(stage);
+        } else {
+            Platform.exit();
+        }
+    }
+
 
     public void initializeBoard() {
         for (int i = 0; i < BOARD_SIZE; i++) {
@@ -64,7 +110,7 @@ public class Main extends Application {
 //                MinesweeperClickHandler handler = new MinesweeperClickHandler();
 //                field.setOnAction(handler);
 
-                field.setOnAction(this::handleClick);
+                field.setOnMouseClicked(this::handleClick);
 
                 gridPane.add(field, i, j);
             }
@@ -77,16 +123,15 @@ public class Main extends Application {
             for (Field f : l) {
                 f.setDisable(true);
                 if (f.isMined()) {
-                    f.setGraphic(new ImageView(image));
+                    f.setGraphic(new ImageView(mineImage));
                 }
             }
         }
-        alert.showAndWait();
-        if (alert.getResult() == ButtonType.YES) {
+        gameOverAlert.showAndWait();
+        if (gameOverAlert.getResult() == ButtonType.YES) {
             start(stage);
         } else {
-            Platform
-                    .exit();
+            Platform.exit();
         }
     }
 
