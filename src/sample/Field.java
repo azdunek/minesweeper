@@ -4,17 +4,21 @@ import javafx.scene.control.Button;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Field extends Button {
     private boolean mined;
     private ArrayList<Field> neighbours = new ArrayList<>();
+    private List<String> colors = Arrays.asList("blue", "green", "red", "purple", "#800000", "#40E0D0", "black", "gray");
+
 
 
     public Field() {
         mined = false;
         this.getStylesheets().add("/sample/style.css");
         this.getStyleClass().add("field");
+
     }
 
     public ArrayList<Field> getNeighbours() {
@@ -53,15 +57,18 @@ public class Field extends Button {
     public void reveal() {
         this.setDisable(true);
 
-        this.setText(String.valueOf(this.getBombsAround()));
 
-        if (this.getBombsAround() == 0) {
-            for (Field n : this.getNeighbours()) {
-                if (!n.isDisabled()) {
-                    n.reveal();
+        if (this.getBombsAround() != 0) {
+            this.setStyle("-fx-text-fill:" + colors.get(this.getBombsAround() - 1) + ";");
+            this.setText(String.valueOf(this.getBombsAround()));
+        } else {
+                for (Field n : this.getNeighbours()) {
+                    if (!n.isDisabled()) {
+                        n.reveal();
+                    }
                 }
             }
         }
     }
-}
+
 

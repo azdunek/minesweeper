@@ -1,8 +1,11 @@
 package sample;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
@@ -19,14 +22,17 @@ public class Main extends Application {
     private List<List<Field>> fields = new ArrayList<>();
     GridPane gridPane = new GridPane();
     Image image = new Image(getClass().getResourceAsStream("mine.gif"), 30, 30, true, true);
+    Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Game over! Do you want to play again?", ButtonType.YES, ButtonType.NO);
+    Stage stage;
 
-    // TODO: Pop up window "Game over"
-    // TODO: Coloured numbers
-    // TODO: Refactoring
-    // TODO: git push in the bush
+    // TODO: Flags on right mouse click! **
+    // TODO: Pop up on win! *
+    // TODO: Play again ***
+    // TODO: Refactoring *
 
     @Override
     public void start(Stage primaryStage) {
+        stage = primaryStage;
 
         initializeBoard();
         mineFields();
@@ -34,9 +40,19 @@ public class Main extends Application {
 
         primaryStage.setTitle("Minesweeper");
         primaryStage.setScene(new Scene(gridPane, 510, 510));
+
         primaryStage.show();
     }
 
+    // Lambda method
+    public void handleClick(ActionEvent actionEvent) {
+        Field f = (Field) actionEvent.getSource();
+        if (f.isMined()) {
+            gameover();
+        } else {
+            f.reveal();
+        }
+    }
 
     public void initializeBoard() {
         for (int i = 0; i < BOARD_SIZE; i++) {
@@ -56,17 +72,6 @@ public class Main extends Application {
         }
     }
 
-    // Lambda method
-    public void handleClick(ActionEvent actionEvent) {
-        Field f = (Field) actionEvent.getSource();
-        if (f.isMined()) {
-            gameover();
-        } else {
-            f.reveal();
-        }
-
-    }
-
     private void gameover() {
         for (List<Field> l : fields) {
             for (Field f : l) {
@@ -75,6 +80,13 @@ public class Main extends Application {
                     f.setGraphic(new ImageView(image));
                 }
             }
+        }
+        alert.showAndWait();
+        if (alert.getResult() == ButtonType.YES) {
+            start(stage);
+        } else {
+            Platform
+                    .exit();
         }
     }
 
@@ -130,7 +142,6 @@ public class Main extends Application {
 
     }
 
-
     public int getRandomWithRange(int min, int max) {
         return ThreadLocalRandom.current().nextInt(min, max + 1);
     }
@@ -138,6 +149,4 @@ public class Main extends Application {
     public static void main(String[] args) {
         launch(args);
     }
-
-
 }
