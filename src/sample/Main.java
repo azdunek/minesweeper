@@ -18,22 +18,19 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Main extends Application {
-    final int BOARD_SIZE = 10;
-    final int FIELD_NUMBER =BOARD_SIZE*BOARD_SIZE;
-    final int MINES_NUMBER = 10;
+    static final int BOARD_SIZE = 10;
+    static final int FIELD_NUMBER = BOARD_SIZE * BOARD_SIZE;
+    static final int MINES_NUMBER = 10;
     private List<List<Field>> fields = new ArrayList<>();
     GridPane gridPane = new GridPane();
-    Image mineImage = new Image(getClass().getResourceAsStream("mine.gif"), 30, 30, true, true);
+    Image mineImage = new Image(getClass().getResourceAsStream("mine.png"), 30, 30, true, true);
     Image flagImage = new Image(getClass().getResourceAsStream("flag.png"), 30, 30, true, true);
     Alert gameOverAlert = new Alert(Alert.AlertType.CONFIRMATION, "Game over! Do you want to play again?", ButtonType.YES, ButtonType.NO);
     Alert winningAlert = new Alert(Alert.AlertType.CONFIRMATION, "Congratulations, you won!", ButtonType.YES, ButtonType.NO);
-
+    Scene myScene = new Scene(gridPane, 510, 510);
     Stage stage;
-    private int flagsCounter = 0;
-    
-    // TODO: Play again ***
-    // TODO: Change mine image
-    // TODO: Refactoring *
+    private int flagsCounter;
+
 
     @Override
     public void start(Stage primaryStage) {
@@ -44,7 +41,7 @@ public class Main extends Application {
         setNeighbours();
 
         primaryStage.setTitle("Minesweeper");
-        primaryStage.setScene(new Scene(gridPane, 510, 510));
+        primaryStage.setScene(myScene);
 
         primaryStage.show();
     }
@@ -55,7 +52,7 @@ public class Main extends Application {
 
         if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
             if (f.isMined()) {
-                gameover();
+                gameOver();
             } else {
                 f.reveal();
             }
@@ -70,35 +67,22 @@ public class Main extends Application {
                 f.setFlagged(true);
             }
         }
-
-        if (flagsCounter == MINES_NUMBER) {
-            if (getNumberOfDisabledFields() == (FIELD_NUMBER - MINES_NUMBER)) {
-                gameWin();
-            }
+        if (flagsCounter == MINES_NUMBER && getNumberOfDisabledFields() == (FIELD_NUMBER - MINES_NUMBER)) {
+            gameWin();
         }
     }
 
     private int getNumberOfDisabledFields() {
-        int numb = 0;
+        int disabledFieldsCounter = 0;
         for (List<Field> fieldList : fields) {
             for (Field field : fieldList) {
-                if(field.isDisabled()){
-                    numb++;
+                if (field.isDisabled()) {
+                    disabledFieldsCounter++;
                 }
             }
         }
-        return numb;
+        return disabledFieldsCounter;
     }
-
-    private void gameWin() {
-        winningAlert.showAndWait();
-        if (winningAlert.getResult() == ButtonType.YES) {
-            start(stage);
-        } else {
-            Platform.exit();
-        }
-    }
-
 
     public void initializeBoard() {
         for (int i = 0; i < BOARD_SIZE; i++) {
@@ -106,32 +90,10 @@ public class Main extends Application {
             for (int j = 0; j < BOARD_SIZE; j++) {
                 Field field = new Field();
                 tmp.add(field);
-
-//                MinesweeperClickHandler handler = new MinesweeperClickHandler();
-//                field.setOnAction(handler);
-
                 field.setOnMouseClicked(this::handleClick);
-
                 gridPane.add(field, i, j);
             }
             fields.add(tmp);
-        }
-    }
-
-    private void gameover() {
-        for (List<Field> l : fields) {
-            for (Field f : l) {
-                f.setDisable(true);
-                if (f.isMined()) {
-                    f.setGraphic(new ImageView(mineImage));
-                }
-            }
-        }
-        gameOverAlert.showAndWait();
-        if (gameOverAlert.getResult() == ButtonType.YES) {
-            start(stage);
-        } else {
-            Platform.exit();
         }
     }
 
@@ -153,18 +115,6 @@ public class Main extends Application {
         }
     }
 
-    public void test() {
-        for (List<Field> l : fields) {
-            for (Field f : l) {
-                if (f.isMined()) {
-                    f.setText("B");
-                } else {
-                    f.setText(String.valueOf(f.getBombsAround()));
-                }
-            }
-        }
-    }
-
     public void setNeighbours() {
         List<Integer> numbers = Arrays.asList(-1, 0, 1);
         for (int x = 0; x < BOARD_SIZE; x++) {
@@ -179,12 +129,41 @@ public class Main extends Application {
                             selectedField.addNeighbour(neighbour);
                         }
                     }
-
                 }
             }
         }
+    }
 
+    private void gameWin() {
+        playAgain(winningAlert);
+    }
 
+    private void gameOver() {
+        for (List<Field> l : fields) {
+            for (Field f : l) {
+                f.setDisable(true);
+                if (f.isMined()) {
+                    f.setGraphic(new ImageView(mineImage));
+                }
+            }
+        }
+        playAgain(gameOverAlert);
+    }
+
+    private void playAgain (Alert alert) {
+        alert.showAndWait();
+        if (alert.getResult() == ButtonType.YES) {
+            restartSettings();
+            start(stage);
+        } else {
+            Platform.exit();
+        }
+    }
+
+    private void restartSettings() {
+        fields.clear();
+        flagsCounter = 0;
+        gridPane.getChildren().clear();
     }
 
     public int getRandomWithRange(int min, int max) {
